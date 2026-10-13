@@ -1,0 +1,6 @@
+{
+  "name": "Idea Beacon (IQ)",
+  "description": "Tactile developer command deck & intelligent mobile workspace for capturing ideas, AI architecture brainstorming, environment setups, and project telemetry.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
