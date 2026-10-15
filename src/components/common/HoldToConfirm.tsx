@@ -9,6 +9,7 @@ interface HoldToConfirmProps {
   icon?: React.ReactNode;
   variant?: 'danger' | 'warning' | 'primary';
   className?: string;
+  disabled?: boolean;
 }
 
 export const HoldToConfirm: React.FC<HoldToConfirmProps> = ({
@@ -19,6 +20,7 @@ export const HoldToConfirm: React.FC<HoldToConfirmProps> = ({
   icon,
   variant = 'warning',
   className = '',
+  disabled = false,
 }) => {
   const [progress, setProgress] = useState(0);
   const [isHolding, setIsHolding] = useState(false);
@@ -28,7 +30,7 @@ export const HoldToConfirm: React.FC<HoldToConfirmProps> = ({
 
   const startHold = (e: React.SyntheticEvent) => {
     e.preventDefault();
-    if (isCompleted) return;
+    if (isCompleted || disabled) return;
     setIsHolding(true);
     startTimeRef.current = Date.now();
 

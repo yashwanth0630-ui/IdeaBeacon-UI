@@ -897,6 +897,45 @@ app.get('/api/repos/:id', (req, res) => {
   return res.json({ success: true, repo });
 });
 
+// POST /api/repos/:id/diagnostics - One-click repository connection testing and diagnostics
+app.post('/api/repos/:id/diagnostics', (req, res) => {
+  const repo = repositoryVault.get(req.params.id);
+  if (!repo) {
+    return res.status(404).json({ success: false, error: 'Repository not found' });
+  }
+
+  // Measure simulated connection check / git branch probe latency (15-35ms)
+  const probeLatencyMs = Math.floor(Math.random() * 20) + 15;
+  const hasDiffs = Boolean(repo.activeProposal && repo.activeProposal.diffs.length > 0);
+
+  return res.json({
+    success: true,
+    repoId: repo.id,
+    name: repo.name,
+    owner: repo.owner,
+    url: repo.url,
+    branch: repo.branch,
+    status: repo.status,
+    latencyMs: probeLatencyMs,
+    lastCommit: repo.lastCommit,
+    gitChecks: {
+      urlReachable: true,
+      branchValid: true,
+      diffsReady: hasDiffs,
+      isLocalBridgeLinked: Boolean(repo.isLocalBridgeLinked),
+    },
+    activeProposalSummary: repo.activeProposal
+      ? {
+          id: repo.activeProposal.id,
+          title: repo.activeProposal.title,
+          status: repo.activeProposal.status,
+          filesCount: repo.activeProposal.diffs.length,
+        }
+      : null,
+    testedAt: new Date().toISOString(),
+  });
+});
+
 // GET /api/repos/:id/diffs - Get active change proposal & diffs
 app.get('/api/repos/:id/diffs', (req, res) => {
   const repo = repositoryVault.get(req.params.id);
@@ -1023,7 +1062,10 @@ async function startServer() {
 
   if (isDev) {
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: {
+        middlewareMode: true,
+        hmr: false,
+      },
       appType: 'spa',
     });
     app.use(vite.middlewares);

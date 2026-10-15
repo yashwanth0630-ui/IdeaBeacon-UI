@@ -1,18 +1,20 @@
 import React, { useState } from 'react';
 import { ScreenType } from '../../types';
 import { IdeaEntity } from '../../db/schemas';
-import { Plus, ArrowRight, ChevronRight, Sparkles, Terminal, Cpu, Laptop, HardDrive, Wifi } from 'lucide-react';
+import { Plus, ArrowRight, ChevronRight, Terminal, Cpu, Laptop, HardDrive, Wifi } from 'lucide-react';
 
 interface DashboardScreenProps {
   ideas: IdeaEntity[];
   onNavigate: (screen: ScreenType) => void;
   onSelectIdea: (idea: IdeaEntity) => void;
+  onOpenOnboarding?: () => void;
 }
 
 export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   ideas,
   onNavigate,
   onSelectIdea,
+  onOpenOnboarding,
 }) => {
   const [quickInput, setQuickInput] = useState('');
   const [isDictating, setIsDictating] = useState(false);
@@ -45,24 +47,9 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
 
   return (
     <div className="flex flex-col w-full px-5 pt-4 pb-28 space-y-5 max-w-lg mx-auto">
-      {/* Greeting & Minimal Brand Header (Matches Image 3.jpeg) */}
-      <div className="space-y-1">
-        <div className="flex items-center gap-2 mb-1.5">
-          <span className="w-2 h-2 rounded-full bg-[#ff6b00]" />
-          <span className="text-[12px] font-medium tracking-wide uppercase text-[#a8a29e] font-mono-code">
-            Local Engine Synced
-          </span>
-        </div>
-        <h1 className="text-[24px] font-semibold tracking-tight text-[#faf8f5] leading-tight font-display">
-          Good evening, Alex
-        </h1>
-        <p className="text-[14px] text-[#e2bfb0]">
-          Everything is saved offline on your device.
-        </p>
-      </div>
 
-      {/* Primary & Secondary Actions (Matches Image 3.jpeg) */}
-      <div className="space-y-2.5 pt-1">
+      {/* Primary Action (Matches Image 3.jpeg & Google App Clean Minimal Style) */}
+      <div className="pt-1">
         {/* Primary Action: Prominent Orange Capture Button */}
         <button
           onClick={() => onNavigate('capture')}
@@ -77,18 +64,6 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             </span>
           </div>
           <ArrowRight className="w-5 h-5 flex-shrink-0 opacity-80" />
-        </button>
-
-        {/* Secondary Action: Visually quieter warm neutral button */}
-        <button
-          onClick={() => onNavigate('brainstorm')}
-          className="w-full h-11 rounded-xl bg-[#24211e] hover:bg-[#2c2927] text-[#faf8f5] font-medium text-[14px] flex items-center justify-between px-4 transition-all border border-[#292524] active:scale-[0.99] cursor-pointer"
-        >
-          <div className="flex items-center gap-3 whitespace-nowrap min-w-0">
-            <Sparkles className="w-4 h-4 text-[#ffbd58] flex-shrink-0" />
-            <span className="text-[#faf8f5] whitespace-nowrap">Brainstorm with AI</span>
-          </div>
-          <ChevronRight className="w-4 h-4 text-[#a8a29e] flex-shrink-0" />
         </button>
       </div>
 

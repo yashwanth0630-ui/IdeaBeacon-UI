@@ -85,49 +85,37 @@ class BridgeService {
       isLocalhost: isLocal,
     });
 
-    // 1. First test local/direct reachability if applicable
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3500);
+    // 1. Only attempt direct browser fetch if safe from mixed-content blocks
+    if (!isHttpsPage || !isHttpTarget || url === '/api' || url === '') {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2000);
 
-    try {
-      // Browser fetch to direct bridge or relative /api endpoint
-      const pingUrl = url === '/api' || url === '' ? '/api/bridge/health' : `${url}/api/bridge/health`;
-      const directResponse = await fetch(pingUrl, {
-        method: 'GET',
-        signal: controller.signal,
-        headers: { Accept: 'application/json' },
-      });
-      clearTimeout(timeoutId);
+      try {
+        const pingUrl = url === '/api' || url === '' ? '/api/bridge/health' : `${url}/api/bridge/health`;
+        const directResponse = await fetch(pingUrl, {
+          method: 'GET',
+          signal: controller.signal,
+          headers: { Accept: 'application/json' },
+        });
+        clearTimeout(timeoutId);
 
-      const latencyMs = Date.now() - startTime;
-      if (directResponse.ok) {
-        const data = await directResponse.json();
-        const diag: BridgeDiagnostics = {
-          status: 'CONNECTED',
-          url,
-          latencyMs,
-          message: `Connected (${latencyMs}ms)`,
-          vaultCount: data.vaultCount,
-          lastChecked: new Date().toISOString(),
-          isLocalhost: isLocal,
-        };
-        this.notify(diag);
-        return diag;
-      }
-    } catch (err: any) {
-      clearTimeout(timeoutId);
-
-      // Check if browser blocked mixed content (HTTPS -> HTTP)
-      if (isHttpsPage && isHttpTarget && !isLocal) {
-        const diag: BridgeDiagnostics = {
-          status: 'MIXED_CONTENT_BLOCKED',
-          url,
-          message: 'Browser blocked insecure HTTP from HTTPS workspace. Use an HTTPS tunnel or local dev mode.',
-          lastChecked: new Date().toISOString(),
-          isLocalhost: isLocal,
-        };
-        this.notify(diag);
-        return diag;
+        const latencyMs = Date.now() - startTime;
+        if (directResponse.ok) {
+          const data = await directResponse.json();
+          const diag: BridgeDiagnostics = {
+            status: 'CONNECTED',
+            url,
+            latencyMs,
+            message: `Connected (${latencyMs}ms)`,
+            vaultCount: data.vaultCount,
+            lastChecked: new Date().toISOString(),
+            isLocalhost: isLocal,
+          };
+          this.notify(diag);
+          return diag;
+        }
+      } catch {
+        clearTimeout(timeoutId);
       }
     }
 
@@ -175,16 +163,12 @@ class BridgeService {
   public async captureIdea(
     ideaData: Omit<IdeaEntity, 'id' | 'createdAt' | 'updatedAt' | 'relativeTime'> & { id?: string }
   ): Promise<{ idea: IdeaEntity; viaBridge: boolean; message: string }> {
-    // Attempt live capture via bridge or local API
-    const targetEndpoint = this.currentStatus === 'CONNECTED' && this.currentUrl !== '/api'
-      ? `${this.currentUrl}/api/ideas/capture`
-      : '/api/ideas/capture';
-
+    // Always use same-origin /api/ideas/capture to prevent mixed-content blocks and connection drops
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 4000);
 
     try {
-      const response = await fetch(targetEndpoint, {
+      const response = await fetch('/api/ideas/capture', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(ideaData),
@@ -205,12 +189,11 @@ class BridgeService {
         return {
           idea: serverIdea,
           viaBridge: true,
-          message: 'Saved directly to SQLite Idea Vault via FastAPI bridge',
+          message: 'Saved directly to SQLite Idea Vault',
         };
       }
-    } catch (err) {
+    } catch {
       clearTimeout(timeoutId);
-      console.warn('Bridge offline or capture endpoint unreachable, saving to offline cache:', err);
     }
 
     // Offline / Fallback: Save to IndexedDB with unsynced status
@@ -275,6 +258,40 @@ class BridgeService {
       return { success: false, error: data.error || 'Failed to connect repository' };
     } catch (err: any) {
       return { success: false, error: err.message || 'Network error connecting repository' };
+    }
+  }
+
+  /**
+   * Runs live connection testing and diagnostics on a connected repository
+   */
+  public async testRepository(repoId: string): Promise<{
+    success: boolean;
+    latencyMs?: number;
+    branch?: string;
+    lastCommit?: { hash: string; message: string; author: string; timestamp: string };
+    gitChecks?: { urlReachable: boolean; branchValid: boolean; diffsReady: boolean; isLocalBridgeLinked: boolean };
+    activeProposalSummary?: { id: string; title: string; status: string; filesCount: number } | null;
+    error?: string;
+  }> {
+    try {
+      const res = await fetch(`/api/repos/${repoId}/diagnostics`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        return {
+          success: true,
+          latencyMs: data.latencyMs,
+          branch: data.branch,
+          lastCommit: data.lastCommit,
+          gitChecks: data.gitChecks,
+          activeProposalSummary: data.activeProposalSummary,
+        };
+      }
+      return { success: false, error: data.error || 'Failed to run repository diagnostics' };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Network error running diagnostics' };
     }
   }
 

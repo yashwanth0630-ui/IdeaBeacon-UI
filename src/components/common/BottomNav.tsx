@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ScreenType } from '../../types';
-import { LayoutGrid, Lightbulb, Plus, Sparkles, Terminal, ChevronUp, Cpu, History, Wifi } from 'lucide-react';
+import { LayoutGrid, Lightbulb, Plus, Terminal, ChevronUp, Cpu, History, Wifi } from 'lucide-react';
 
 interface BottomNavProps {
   currentScreen: ScreenType;
@@ -27,7 +27,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
       icon: <Lightbulb className="w-5 h-5 mb-0.5" />,
       badge: ideaCount > 0 ? ideaCount : undefined,
     },
-    // Center FAB spacer
+    // Center FAB
     {
       id: 'capture' as ScreenType,
       label: 'Capture',
@@ -35,9 +35,9 @@ export const BottomNav: React.FC<BottomNavProps> = ({
       icon: <Plus className="w-6 h-6 stroke-[2.5]" />,
     },
     {
-      id: 'brainstorm' as ScreenType,
-      label: 'AI Hub',
-      icon: <Sparkles className="w-5 h-5 mb-0.5" />,
+      id: 'timeline' as ScreenType,
+      label: 'Timeline',
+      icon: <History className="w-5 h-5 mb-0.5" />,
     },
     {
       id: 'project' as ScreenType,
@@ -152,11 +152,11 @@ export const BottomNav: React.FC<BottomNavProps> = ({
           {navItems.map((item) => {
             if (item.isCenterAction) {
               return (
-                <div key={item.id} className="flex-shrink-0 px-2 -mt-4">
+                <div key={item.id} className="flex-1 flex items-center justify-center -mt-5">
                   <button
                     onClick={() => onNavigate('capture')}
                     aria-label="Capture an idea"
-                    className="flex items-center justify-center w-12 h-12 rounded-full bg-[#ff6b00] text-[#121110] shadow-[0_0_24px_rgba(255,107,0,0.45)] hover:bg-[#ff7a1a] active:scale-95 transition-all focus:outline-none focus:ring-2 focus:ring-[#ff6b00]"
+                    className="flex items-center justify-center w-13 h-13 rounded-full bg-[#ff6b00] text-[#121110] shadow-[0_4px_24px_rgba(255,107,0,0.45)] hover:bg-[#ff7a1a] active:scale-95 transition-all focus:outline-none focus:ring-2 focus:ring-[#ff6b00] border-4 border-[#121110] cursor-pointer"
                   >
                     {item.icon}
                   </button>

@@ -3,6 +3,36 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <script>
+      // Suppress harmless Vite HMR WebSocket logs in cloud iframe sandbox
+      (function() {
+        window.addEventListener('unhandledrejection', function(e) {
+          var r = e.reason && (e.reason.message || String(e.reason)) || '';
+          if (r.indexOf('WebSocket') !== -1 || r.indexOf('websocket') !== -1 || r.indexOf('vite') !== -1) {
+            e.preventDefault();
+          }
+        });
+        window.addEventListener('error', function(e) {
+          var m = e.message || '';
+          if (m.indexOf('WebSocket') !== -1 || m.indexOf('websocket') !== -1) {
+            e.preventDefault();
+          }
+        });
+        var origError = console.error;
+        console.error = function() {
+          var text = Array.prototype.slice.call(arguments).map(function(a) {
+            return String(a && a.message || a);
+          }).join(' ');
+          if (text.indexOf('[vite]') !== -1 && text.indexOf('websocket') !== -1) {
+            return;
+          }
+          if (text.indexOf('WebSocket closed without opened') !== -1) {
+            return;
+          }
+          origError.apply(console, arguments);
+        };
+      })();
+    </script>
     <title>Idea Beacon (IQ)</title>
     <meta name="description" content="Tactile developer command deck & intelligent mobile workspace for capturing ideas, AI architecture brainstorming, environment setups, and project telemetry." />
     <meta property="og:title" content="Idea Beacon (IQ)" />

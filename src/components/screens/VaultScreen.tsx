@@ -17,6 +17,7 @@ import {
   AlignLeft,
   Layers,
   X,
+  Database,
 } from 'lucide-react';
 import { Alert } from '../common/Alert';
 import { DropdownMenu } from '../common/DropdownMenu';
@@ -254,6 +255,19 @@ export const VaultScreen: React.FC<VaultScreenProps> = ({
           </button>
         </div>
       )}
+
+      {/* Visual Offline-Ready Badge (Confirmed User Preference) */}
+      <div className="flex items-center justify-between px-3.5 py-2 rounded-xl bg-[#1b1917] border border-[#ff6b00]/30 text-[#e2bfb0] text-[11px] font-mono-code">
+        <div className="flex items-center gap-2">
+          <Database className="w-3.5 h-3.5 text-[#ff6b00]" />
+          <span className="font-semibold text-[#faf8f5]">IndexedDB Storage Active</span>
+          <span className="text-[#a8a29e] hidden sm:inline">· {ideas.length} ideas cached locally</span>
+        </div>
+        <span className="text-[#4ade80] flex items-center gap-1.5 font-medium">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#4ade80]" />
+          Offline Ready
+        </span>
+      </div>
 
       {/* Global Search Header Box */}
       <div className="space-y-2">

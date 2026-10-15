@@ -5,7 +5,6 @@ import { BridgeStatusModal } from '../common/BridgeStatusModal';
 import { TextShimmer } from '../common/TextShimmer';
 import {
   Server,
-  Sparkles,
   Layers,
   FolderGit2,
   Terminal,
@@ -14,6 +13,7 @@ import {
   RefreshCw,
   Search,
   ExternalLink,
+  HelpCircle,
 } from 'lucide-react';
 
 interface ResponsiveWorkspaceProps {
@@ -21,6 +21,7 @@ interface ResponsiveWorkspaceProps {
   onNavigate: (screen: ScreenType) => void;
   children: React.ReactNode;
   ideaCount: number;
+  onOpenOnboarding?: () => void;
 }
 
 /**
@@ -33,6 +34,7 @@ export const ResponsiveWorkspace: React.FC<ResponsiveWorkspaceProps> = ({
   onNavigate,
   children,
   ideaCount,
+  onOpenOnboarding,
 }) => {
   const [isBridgeModalOpen, setIsBridgeModalOpen] = useState(false);
   const [bridgeDiag, setBridgeDiag] = useState<BridgeDiagnostics | null>(null);
@@ -131,16 +133,6 @@ export const ResponsiveWorkspace: React.FC<ResponsiveWorkspaceProps> = ({
               </span>
             </button>
             <button
-              onClick={() => onNavigate('brainstorm')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                currentScreen === 'brainstorm'
-                  ? 'bg-[#271e16] text-[#ffb693] shadow-sm'
-                  : 'text-[#a8a29e] hover:text-[#faf8f5] hover:bg-[#24211e]'
-              }`}
-            >
-              AI Co-Pilot
-            </button>
-            <button
               onClick={() => onNavigate('project')}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 currentScreen === 'project' || currentScreen === 'timeline' || currentScreen === 'stepper'
@@ -154,6 +146,21 @@ export const ResponsiveWorkspace: React.FC<ResponsiveWorkspaceProps> = ({
 
           {/* Right Action Bar */}
           <div className="flex items-center gap-2">
+            {/* Google Apps Standard Help & Quickstart Guide Trigger */}
+            {onOpenOnboarding && (
+              <button
+                onClick={onOpenOnboarding}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#1d1b19] hover:bg-[#272320] border border-[#292524] hover:border-[#ff6b00]/40 text-[#a8a29e] hover:text-[#faf8f5] transition-all cursor-pointer group"
+                title="Help & Quick Start Guide (Google Style)"
+                aria-label="Help & Quick Start Guide"
+              >
+                <HelpCircle className="w-4 h-4 text-[#ff6b00] group-hover:scale-105 transition-transform" />
+                <span className="text-[11px] font-mono-code font-bold hidden sm:inline">
+                  Quick Start
+                </span>
+              </button>
+            )}
+
             {/* Quick Capture Button */}
             <button
               onClick={() => onNavigate('capture')}

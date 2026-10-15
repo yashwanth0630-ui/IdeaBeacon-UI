@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { IdeaEntity } from '../../db/schemas';
-import { ArrowLeft, Check, Eye, Code, List, CheckSquare, Mic, Lock, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Check, Eye, Code, List, CheckSquare, Mic, Lock, ShieldCheck, Database } from 'lucide-react';
 import { Alert } from '../common/Alert';
 
 interface CaptureScreenProps {
@@ -49,14 +49,24 @@ pub fn probe_tcp_connect(ctx: ProbeContext) -> u32 {
   }, []);
 
   const handleSave = () => {
-    if (!title.trim()) {
-      setValidationError('Please provide an idea title to store in local vault.');
-      return;
+    let finalTitle = title.trim();
+    if (!finalTitle) {
+      // Auto-extract first heading or non-empty line from content as title fallback
+      const candidateLine = content
+        .split('\n')
+        .map((l) => l.trim().replace(/^#+\s*/, '').replace(/[`*]/g, ''))
+        .find((l) => l.length > 2 && !l.startsWith('//'));
+      if (candidateLine) {
+        finalTitle = candidateLine.slice(0, 60);
+      } else {
+        finalTitle = 'My Idea';
+      }
+      setTitle(finalTitle);
     }
     setValidationError('');
 
     const newIdea: Partial<IdeaEntity> = {
-      title: title.trim(),
+      title: finalTitle,
       category,
       content,
       preview: content.replace(/[#`\n]/g, ' ').slice(0, 120).trim() + '...',
@@ -123,6 +133,19 @@ pub fn probe_tcp_connect(ctx: ProbeContext) -> u32 {
         </span>
       </div>
 
+      {/* Visual Offline-Ready Badge (Confirmed User Preference) */}
+      <div className="flex items-center justify-between px-3.5 py-2 rounded-xl bg-[#1b1917] border border-[#ff6b00]/30 text-[#e2bfb0] text-[11px] font-mono-code">
+        <div className="flex items-center gap-2">
+          <Database className="w-3.5 h-3.5 text-[#ff6b00]" />
+          <span className="font-semibold text-[#faf8f5]">Local IndexedDB Active</span>
+          <span className="text-[#a8a29e] hidden sm:inline">· Instant Offline Persistence</span>
+        </div>
+        <span className="text-[#4ade80] flex items-center gap-1.5 font-medium">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#4ade80]" />
+          Ready Offline
+        </span>
+      </div>
+
       {/* Save Success Alert Feedback (Pattern 1) */}
       {showSaveAlert && (
         <Alert
@@ -142,14 +165,22 @@ pub fn probe_tcp_connect(ctx: ProbeContext) -> u32 {
         />
       )}
 
-      {/* Idea Title Input (Matches Image 12.jpeg) */}
-      <div className="space-y-1">
+      {/* Idea Title Input - Clean and Simple */}
+      <div className="space-y-1.5 p-3 rounded-xl bg-[#1d1b19] border border-[#38332e] focus-within:border-[#ff6b00] focus-within:ring-1 focus-within:ring-[#ff6b00]/40 transition-all shadow-sm">
+        <label htmlFor="idea-title-input" className="text-[12px] font-mono-code font-bold uppercase tracking-wider text-[#ffb693] flex items-center gap-1.5 cursor-pointer">
+          <span className="w-2 h-2 rounded-full bg-[#ff6b00]" />
+          <span>Idea Title</span>
+        </label>
         <input
+          id="idea-title-input"
           type="text"
           value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="eBPF-powered network latency probe for..."
-          className="w-full bg-transparent text-[20px] font-semibold text-[#faf8f5] placeholder:text-[#78716c] focus:outline-none border-b border-[#292524] pb-2 pt-1 font-display"
+          onChange={(e) => {
+            setTitle(e.target.value);
+            if (validationError) setValidationError('');
+          }}
+          placeholder="My Idea"
+          className="w-full bg-transparent text-[18px] sm:text-[20px] font-semibold text-[#faf8f5] placeholder:text-[#78716c] focus:outline-none font-display pt-0.5"
         />
       </div>
 

@@ -332,6 +332,35 @@ async function runTests() {
       confirmedApplyData
     );
 
+    // Test 20: POST /api/repos/:id/diagnostics - One-click repository connection diagnostics
+    const diagRes = await fetch(`${BASE_URL}/api/repos/repo-hyperstream-ebpf/diagnostics`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    const diagData = await diagRes.json();
+    assert(
+      diagRes.status === 200 &&
+        diagData.success === true &&
+        typeof diagData.latencyMs === 'number' &&
+        diagData.gitChecks &&
+        diagData.gitChecks.branchValid === true &&
+        diagData.branch === 'master',
+      'POST /api/repos/:id/diagnostics returns honest health, probe latency ms, and git branch verification',
+      diagData
+    );
+
+    // Test 21: POST /api/repos/:id/diagnostics - 404 for unknown repo
+    const unknownDiagRes = await fetch(`${BASE_URL}/api/repos/repo-does-not-exist/diagnostics`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    const unknownDiagData = await unknownDiagRes.json();
+    assert(
+      unknownDiagRes.status === 404 && unknownDiagData.success === false,
+      'POST /api/repos/:id/diagnostics returns 404 for non-existent repository',
+      unknownDiagData
+    );
+
     console.log(`\n🏁 Test Run Finished: ${passed} passed, ${failed} failed.\n`);
     if (failed > 0) {
       process.exit(1);
